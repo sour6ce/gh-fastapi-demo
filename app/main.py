@@ -42,8 +42,16 @@ async def root():
 
 @app.post("/solution", response_model=float)
 async def solution(data: ProcessModel) -> float:
-    process_orders(data.orders, data.criterion)
+    return process_orders(data.orders, data.criterion)
 
 
 def process_orders(orders, criterion):
-    raise NotImplementedError()
+    # Not interfering with signature but yet typing for better editor support
+    orders: List[Order] = orders
+    criterion: Criterion = criterion
+
+    def match(order: Order, criterion: Criterion) -> bool:
+        return criterion == Criterion.all or \
+            order.status.name == criterion.name
+
+    return sum((order.price*order.quantity for order in orders if match(order)))
