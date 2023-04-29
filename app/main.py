@@ -38,3 +38,12 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+@app.post("/solution", response_model=float)
+async def solution(data: ProcessModel) -> float:
+    process_orders(data.orders, data.criterion)
+
+
+def process_orders(orders, criterion):
+    raise NotImplementedError()
