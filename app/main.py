@@ -34,6 +34,8 @@ class ProcessModel(BaseModel):
 
 app = FastAPI()
 
+# region Endpoints
+
 
 @app.get("/")
 async def root():
@@ -44,6 +46,8 @@ async def root():
 async def solution(data: ProcessModel) -> float:
     return process_orders(data.orders, data.criterion)
 
+# endregion
+
 
 def process_orders(orders, criterion):
     # Not interfering with signature but yet typing for better editor support
@@ -51,6 +55,7 @@ def process_orders(orders, criterion):
     criterion: Criterion = criterion
 
     def match(order: Order, criterion: Criterion) -> bool:
+        # The text in both enums definitions are the same except or 'all'
         return criterion == Criterion.all or \
             order.status.name == criterion.name
 
