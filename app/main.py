@@ -59,4 +59,7 @@ def process_orders(orders, criterion):
         return criterion == Criterion.all or \
             order.status.name == criterion.name
 
-    return sum((order.price*order.quantity for order in orders if match(order)))
+    return sum(
+        (order.price * order.quantity for order in orders
+         if match(order, criterion))
+    )
