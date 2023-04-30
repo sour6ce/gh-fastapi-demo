@@ -1,7 +1,8 @@
+import datetime
 from math import isclose
 
 import pytest
-from app.main import app
+from app.main import REDIS_ON, app, cache
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -201,3 +202,30 @@ def test_validation3():
     assert response.json()['detail'][0]['msg'].startswith(
         "value is not a valid enumeration member; permitted:")
     assert response.json()['detail'][0]['type'] == 'type_error.enum'
+
+
+def test_redis_on():
+    if REDIS_ON:
+        # Used the time to ensure that the value access is exactly the one of the current test run
+        # and not another from a previous run
+        time = datetime.datetime.now().strftime('%H%M%S')
+
+        cache.set('test_cache', time)
+        assert cache.get('test_cache').decode('utf-8') == time
+
+
+def test_cache():
+    if REDIS_ON:
+        data = {
+            "orders": [
+                {"id": 1, "item": "Laptop", "quantity": 1, "price": 999.99, "status": "completed"},
+                {"id": 2, "item": "Smartphone", "quantity": 2, "price": 499.95, "status": "pending"},
+                {"id": 3, "item": "Headphones", "quantity": 3, "price": 99.90, "status": "completed"},
+                {"id": 4, "item": "Mouse", "quantity": 4, "price": 24.99, "status": "canceled"},
+            ],
+            "criterion": "completed"
+        }
+
+        response = client.post("/solution", json=data)
+        response2 = client.post("/solution", json=data)
+        assert isclose(response.json(), response2.json())

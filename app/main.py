@@ -1,8 +1,27 @@
+import json
+import os
 from enum import StrEnum
 from typing import List
 
+import redis
 from fastapi import FastAPI
 from pydantic import BaseModel, validator
+
+# region Cache Load
+
+REDIS_URL = os.environ.get('REDIS_URL', "redis://localhost:6379")
+REDIS_ON = False
+
+if REDIS_URL is not None:
+    cache = redis.from_url(REDIS_URL)
+    try:
+        REDIS_ON = cache.ping()
+    except:
+        pass
+
+
+# endregion
+
 
 # region Models
 
@@ -44,7 +63,19 @@ async def root():
 
 @app.post("/solution", response_model=float)
 async def solution(data: ProcessModel) -> float:
-    return process_orders(data.orders, data.criterion)
+    # Check if the cache has the value
+    if REDIS_ON:
+        key = data.json()
+        result = cache.get(key)
+
+        if result is None:
+            result = process_orders(data.orders, data.criterion)
+            cache.set(key, result)
+            return result
+        else:
+            return float(result.decode('utf-8'))
+    else:
+        return process_orders(data.orders, data.criterion)
 
 # endregion
 
