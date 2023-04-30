@@ -141,3 +141,63 @@ def test_invalid_field():
     assert response.json()['detail'][0]['loc'][0] == 'body'
     assert response.json()['detail'][0]['msg'] == 'extra fields not permitted'
     assert response.json()['detail'][0]['type'] == 'value_error.extra'
+
+
+def test_validation1():
+    data = {
+        "orders": [
+            {"id": 1, "item": "Laptop", "quantity": 1, "price": 999.99, "status": "completed"},
+            {"id": 2, "item": "Smartphone", "quantity": 2, "price": 499.95, "status": "pending"},
+            {"id": 3, "item": "Headphones", "quantity": 3, "price": 99.90, "status": "completed"},
+            {"id": 4, "item": "Mouse", "quantity": 4, "price": -24.99, "status": "canceled"},
+        ],
+        "criterion": "completed"
+    }
+
+    response = client.post("/solution", json=data)
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['loc'][0] == 'body'
+    assert response.json()['detail'][0]['loc'][3] == 'price'
+    assert response.json()['detail'][0]['msg'] \
+        == 'Price value mut be greater than or equal to 0'
+    assert response.json()['detail'][0]['type'] == 'value_error'
+
+
+def test_validation2():
+    data = {
+        "orders": [
+            {"id": 1, "item": "Laptop", "quantity": 1, "price": 999.99, "status": "completed"},
+            {"id": 2, "item": "Smartphone", "quantity": 2, "price": 499.95, "status": "waiting"},
+            {"id": 3, "item": "Headphones", "quantity": 3, "price": 99.90, "status": "completed"},
+            {"id": 4, "item": "Mouse", "quantity": 4, "price": 24.99, "status": "canceled"},
+        ],
+        "criterion": "completed"
+    }
+
+    response = client.post("/solution", json=data)
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['loc'][0] == 'body'
+    assert response.json()['detail'][0]['loc'][3] == 'status'
+    assert response.json()['detail'][0]['msg'] \
+        == "value is not a valid enumeration member; permitted: 'completed', 'pending', 'canceled'"
+    assert response.json()['detail'][0]['type'] == 'type_error.enum'
+
+
+def test_validation3():
+    data = {
+        "orders": [
+            {"id": 1, "item": "Laptop", "quantity": 1, "price": 999.99, "status": "completed"},
+            {"id": 2, "item": "Smartphone", "quantity": 2, "price": 499.95, "status": "completed"},
+            {"id": 3, "item": "Headphones", "quantity": 3, "price": 99.90, "status": "completed"},
+            {"id": 4, "item": "Mouse", "quantity": 4, "price": 24.99, "status": "canceled"},
+        ],
+        "criterion": "waiting"
+    }
+
+    response = client.post("/solution", json=data)
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['loc'][0] == 'body'
+    assert response.json()['detail'][0]['loc'][1] == 'criterion'
+    assert response.json()['detail'][0]['msg'].startswith(
+        "value is not a valid enumeration member; permitted:")
+    assert response.json()['detail'][0]['type'] == 'type_error.enum'
