@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files: 
+**/__pycache__/
+**/*.py[cod]
+
+# Distribution / packaging
+.env
+
+# Unit test cache
+.pytest_cache/
+
+# Redis dump file
+*.rdb
+
+# Editor
+.vscode/
